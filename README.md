@@ -1,0 +1,3 @@
+# [KDD 2026] Benchmarking Counterfactual Prediction in Epidemic Time Series with Time-Varying Interventions
+
+This is the official implementation of "[Benchmarking Counterfactual Prediction in Epidemic Time Series with Time-Varying Interventions](https://arxiv.org/pdf/xxxxx)" (EpiCF-Bench) appearing in KDD 2026 (D&B Track). Authors are Wenhao Mu, Facundo Yan, Anik Mumssen, Marisa Eisenberg and Alexander Rodríguez from the University of Michigan.
