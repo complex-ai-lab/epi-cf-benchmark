@@ -20,11 +20,13 @@ The first cleaned release includes:
 
 - KDE baseline for single-policy and multi-policy settings
 - Transformer baseline for single-policy and multi-policy settings
+- RNN S-learner baseline for single-policy and multi-policy settings
+- RNN T-learner baseline for single-policy and multi-policy settings
 - Shared dataset loading code for ABM-generated CSV files
-- Preprocessing and postprocessing scripts adapted from the original experiment notebooks
+- Preprocessing and postprocessing scripts for benchmark data and model outputs
 - Trajectory, distributional, predictive-interval, calibration, and CATE evaluation utilities
 
-Additional baselines from the paper, including S/T learner variants, VAE, diffusion, and TECDE, will be added in later updates.
+Additional baselines from the paper, including VAE, diffusion, and TECDE, will be added in later updates.
 
 ## Repository Layout
 
@@ -35,12 +37,14 @@ Additional baselines from the paper, including S/T learner variants, VAE, diffus
 │   │   ├── train_kde.py
 │   │   ├── infer_kde.py
 │   │   ├── train_transformer.py
-│   │   └── infer_transformer.py
+│   │   ├── infer_transformer.py
+│   │   └── train_st_learner.py
 │   └── multi_policy/
 │       ├── train_kde.py
 │       ├── infer_kde.py
 │       ├── train_transformer.py
-│       └── infer_transformer.py
+│       ├── infer_transformer.py
+│       └── train_st_learner.py
 ├── scripts/
 │   ├── preprocess_data.py
 │   ├── postprocess_predictions.py
@@ -55,6 +59,7 @@ Additional baselines from the paper, including S/T learner variants, VAE, diffus
         ├── models.py
         ├── postprocess.py
         ├── preprocessing.py
+        ├── st_learner.py
         └── transformer.py
 ```
 
@@ -104,7 +109,7 @@ The default experiments assume:
 
 ## Preprocessing
 
-The preprocessing scripts convert raw ABM output tables into the `y/a/x/xa` files consumed by the ML baselines. They are cleaned versions of the original `data_process_new.ipynb` workflow.
+The preprocessing scripts convert raw ABM output tables into the `y/a/x/xa` files consumed by the ML baselines.
 
 For the single-policy setting:
 
@@ -190,6 +195,34 @@ python experiments/multi_policy/infer_transformer.py \
   --prefix transformer_cf
 ```
 
+### Single-Policy RNN S/T Learner
+
+```bash
+python experiments/single_policy/train_st_learner.py \
+  --data-dir data_single_final \
+  --model-dir models_single_final \
+  --output-dir output_single_final \
+  --epochs 200 \
+  --seed 1 \
+  --run-id 1_new
+```
+
+This writes files such as `slearner_rnn_mean_f_1_new.npy`, `slearner_rnn_mean_cf_1_new.npy`, `tlearner_rnn_mean_f_1_new.npy`, and `tlearner_rnn_mean_cf_1_new.npy`.
+
+### Multi-Policy RNN S/T Learner
+
+```bash
+python experiments/multi_policy/train_st_learner.py \
+  --data-dir data_multi_final \
+  --model-dir models_multi_final \
+  --output-dir output_multi_final \
+  --epochs 200 \
+  --seed 3 \
+  --run-id 3_new
+```
+
+The multi-policy script trains on `y_train_3.csv`, `a_train_3.csv`, and `x_train_3.csv`, matching the original multi-policy S/T learner setup.
+
 ## Evaluation
 
 ## Postprocessing
@@ -217,7 +250,7 @@ python scripts/evaluate_predictions.py \
   --output results/transformer_single_metrics.csv
 ```
 
-For sampled predictions and the distributional metrics used in the notebooks:
+For sampled predictions and distributional metrics:
 
 ```bash
 python scripts/evaluate_distribution.py \

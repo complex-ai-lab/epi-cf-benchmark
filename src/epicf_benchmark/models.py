@@ -58,3 +58,66 @@ class FluTransformer(nn.Module):
         h = self.pos_enc(h)
         h = self.transformer(h, src_key_padding_mask=src_key_padding_mask)
         return self.output_proj(h).squeeze(-1)
+
+
+class FluBiRNN(nn.Module):
+    """Bidirectional RNN baseline for sequence-to-sequence regression."""
+
+    def __init__(
+        self,
+        input_dim: int,
+        hidden_size: int = 256,
+        num_layers: int = 2,
+        rnn_type: str = "lstm",
+        dropout: float = 0.15,
+        proj_dim: Optional[int] = 128,
+    ) -> None:
+        super().__init__()
+        rnn_type = rnn_type.lower()
+        if rnn_type not in ("rnn", "gru", "lstm"):
+            raise ValueError("rnn_type must be one of: rnn, gru, lstm")
+
+        rnn_cls = {"rnn": nn.RNN, "gru": nn.GRU, "lstm": nn.LSTM}[rnn_type]
+        self.rnn = rnn_cls(
+            input_size=input_dim,
+            hidden_size=hidden_size,
+            num_layers=num_layers,
+            dropout=dropout if num_layers > 1 else 0.0,
+            bidirectional=True,
+            batch_first=True,
+        )
+
+        out_dim = hidden_size * 2
+        if proj_dim is None:
+            self.head = nn.Linear(out_dim, 1)
+        else:
+            self.head = nn.Sequential(
+                nn.Linear(out_dim, proj_dim),
+                nn.GELU(),
+                nn.Dropout(dropout),
+                nn.Linear(proj_dim, 1),
+            )
+
+    def forward(
+        self,
+        x: torch.Tensor,
+        src_key_padding_mask: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
+        if src_key_padding_mask is not None:
+            if src_key_padding_mask.dtype != torch.bool:
+                src_key_padding_mask = src_key_padding_mask.bool()
+            lengths = (~src_key_padding_mask).sum(dim=1).to(torch.int64).cpu()
+            packed_x = nn.utils.rnn.pack_padded_sequence(
+                x, lengths, batch_first=True, enforce_sorted=False
+            )
+            packed_h, _ = self.rnn(packed_x)
+            h, _ = nn.utils.rnn.pad_packed_sequence(
+                packed_h, batch_first=True, total_length=x.size(1)
+            )
+        else:
+            h, _ = self.rnn(x)
+
+        out = self.head(h).squeeze(-1)
+        if src_key_padding_mask is not None:
+            out = out.masked_fill(src_key_padding_mask, 0.0)
+        return out
