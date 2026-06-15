@@ -9,7 +9,7 @@ EpiCF-Bench evaluates counterfactual prediction for epidemic time series under t
 ## Resources
 
 - ABM simulator repository: [complex-ai-lab/epi-diff-abm](https://github.com/complex-ai-lab/epi-diff-abm)
-- Benchmark dataset: [Zenodo record 20366265](https://zenodo.org/records/20366265)
+- Benchmark dataset: [Zenodo record 20680219](https://zenodo.org/records/20680219)
 - This repository: ML baselines, prediction scripts, and evaluation code
 
 The ABM code and benchmark dataset are intentionally maintained outside this repository. This repo is meant to stay lightweight and focused on reproducing the learning-based benchmark experiments.
